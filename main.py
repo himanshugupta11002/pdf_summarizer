@@ -1,12 +1,14 @@
 import os
 import sys
 
-from PyQt5.QtWidgets import QApplication, QMainWindow, QAction, QMenu, QMessageBox, QFileDialog, QTabWidget, QToolBar, QLabel, QLineEdit
+from PyQt5.QtWidgets import QApplication, QMainWindow, QAction, QMessageBox, QFileDialog, QTabWidget, QToolBar, QLabel, QLineEdit, QPushButton
 from PyQt5.QtGui import QIcon, QPixmap
 from PyQt5.QtCore import QSize, QUrl
 
 from PyQt5.QtWebEngineWidgets import QWebEngineView, QWebEngineSettings
 
+# Import LsaSummarizer from summarization.py
+from summarizer import LsaSummarizer
 
 class MainWindow(QMainWindow):
     def __init__(self, *args, **kwargs):
@@ -58,6 +60,11 @@ class MainWindow(QMainWindow):
         navtb.addAction(stop_btn)
         stop_btn.triggered.connect(lambda: self.tabs.currentWidget().stop())
 
+        # Add a button for summarization
+        summarizer_btn = QPushButton("Summarize")
+        summarizer_btn.clicked.connect(self.summarize_document)
+        navtb.addWidget(summarizer_btn)
+
         file_menu = self.menuBar().addMenu("&File")
         open_file_action = QAction(QIcon(os.path.join('icons', 'cil-folder-open.png')), "Open file...", self)
         open_file_action.setStatusTip("Open file")
@@ -77,9 +84,6 @@ class MainWindow(QMainWindow):
 
         self.setWindowTitle('browser')
         self.setWindowIcon(QIcon(os.path.join('icons', 'cil-screen-desktop.png')))
-
-        # self.setStyleSheet(QTabWidget{
-        # })
 
         self.add_new_tab(QUrl('http://www.google.com'), 'HomePage')
         self.show()
@@ -141,15 +145,42 @@ class MainWindow(QMainWindow):
         self.tabs.currentWidget().setUrl(QUrl(""))
 
     def open_file(self):
-        file_path = QFileDialog.getOpenFileName(self, 'Open file', os.getenv('HOME'))
+        file_path, _ = QFileDialog.getOpenFileName(self, 'Open file', os.getenv('HOME'))
 
-        file_extension = os.path.splitext(file_path[0])[1]
+        file_extension = os.path.splitext(file_path)[1]
 
         if file_extension in ['.pdf', '.txt', '.html', '.png', '.jpg']:
-            self.add_new_tab(QUrl.fromLocalFile(file_path[0]), os.path.basename(file_path[0]))
+            self.add_new_tab(QUrl.fromLocalFile(file_path), os.path.basename(file_path))
         else:
             QMessageBox.warning(self, "Extension not supported", "Extension not supported")
 
+    def summarize_document(self):
+        current_browser = self.tabs.currentWidget()
+        if current_browser is None:
+            QMessageBox.warning(self, "No tab opened", "No tab is currently opened.")
+            return
+
+        # Get the URL of the current tab
+        url = current_browser.url()
+
+        # Check if the URL is a local file
+        if url.scheme() != 'file':
+            QMessageBox.warning(self, "Invalid URL", "Summarization can only be applied to local files.")
+            return
+
+        # Get the path of the local file
+        file_path = url.toLocalFile()
+
+        # Read the content of the file
+        with open(file_path, "r", encoding='utf-8') as file:
+            document_content = file.read()
+
+        # Summarize the document content using LsaSummarizer
+        summarizer = LsaSummarizer()
+        summary = summarizer(document_content, 3)  # Change '3' to the desired number of sentences in the summary
+
+        # Display the summary in a message box
+        QMessageBox.information(self, "Summary", "\n".join(summary))
 
 app = QApplication(sys.argv)
 app.setApplicationName("browser")
@@ -158,6 +189,3 @@ app.setOrganizationDomain("google.com")
 
 window = MainWindow()
 app.exec_()
-
-
-
