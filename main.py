@@ -6,8 +6,6 @@ from PyQt5.QtGui import QIcon, QPixmap
 from PyQt5.QtCore import QSize, QUrl
 
 from PyQt5.QtWebEngineWidgets import QWebEngineView, QWebEngineSettings
-
-# Import LsaSummarizer from summarization.py
 from summarizer import LsaSummarizer
 
 class MainWindow(QMainWindow):
@@ -60,7 +58,7 @@ class MainWindow(QMainWindow):
         navtb.addAction(stop_btn)
         stop_btn.triggered.connect(lambda: self.tabs.currentWidget().stop())
 
-        # Add a button for summarization
+
         summarizer_btn = QPushButton("Summarize")
         summarizer_btn.clicked.connect(self.summarize_document)
         navtb.addWidget(summarizer_btn)
@@ -160,26 +158,25 @@ class MainWindow(QMainWindow):
             QMessageBox.warning(self, "No tab opened", "No tab is currently opened.")
             return
 
-        # Get the URL of the current tab
+        
         url = current_browser.url()
 
-        # Check if the URL is a local file
+    
         if url.scheme() != 'file':
             QMessageBox.warning(self, "Invalid URL", "Summarization can only be applied to local files.")
             return
 
-        # Get the path of the local file
+        
         file_path = url.toLocalFile()
 
-        # Read the content of the file
+        
         with open(file_path, "r", encoding='utf-8') as file:
             document_content = file.read()
 
-        # Summarize the document content using LsaSummarizer
         summarizer = LsaSummarizer()
-        summary = summarizer(document_content, 3)  # Change '3' to the desired number of sentences in the summary
+        summary = summarizer(document_content, 3)  
 
-        # Display the summary in a message box
+        
         QMessageBox.information(self, "Summary", "\n".join(summary))
 
 app = QApplication(sys.argv)
