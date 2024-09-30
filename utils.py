@@ -2,8 +2,8 @@ import os
 
 def save_data(data, file_name):
     """Save data to a file on the user's system."""
-    data_dir = os.path.join(os.path.expanduser("~"), ".your_app_data")  # Example: Store data in user's home directory
-    os.makedirs(data_dir, exist_ok=True)  # Create directory if it doesn't exist
+    data_dir = os.path.join(os.path.expanduser("~"), ".your_app_data")  
+    os.makedirs(data_dir, exist_ok=True)  
     file_path = os.path.join(data_dir, file_name)
     with open(file_path, "w") as file:
         file.write(data)
